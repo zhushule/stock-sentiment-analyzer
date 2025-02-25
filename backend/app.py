@@ -2,8 +2,11 @@ import os
 import yfinance as yf
 from flask import Flask, jsonify
 from flask_cors import CORS
-from services.sentiment_service import get_stock_sentiment
 from dotenv import load_dotenv
+from services.sentiment_service import get_stock_sentiment, analyze_sentiment_with_score
+from services.stock_data import get_stock_data  # ✅ FIXED: Correct Import
+from services.indicators import get_technical_indicators  # ✅ FIXED: Correct Import
+
 
 # Load environment variables
 load_dotenv()
@@ -56,6 +59,25 @@ def stock_sentiment(symbol):
     """ API Endpoint to get stock sentiment based on news """
     sentiment_data = get_stock_sentiment(symbol)
     return jsonify(sentiment_data)
+
+@app.route('/api/trade-decision/<symbol>', methods=['GET'])
+def trade_decision(symbol):
+    """ Combine stock price, technical indicators, and sentiment to make a buy/sell decision """
+    stock_data = get_stock_data(symbol)  # ✅ FIXED: This should work now
+    indicators = get_technical_indicators(symbol)  # ✅ FIXED
+    sentiment_data = get_stock_sentiment(symbol)  # ✅ FIXED
+    
+    sentiment_score = analyze_sentiment_with_score(sentiment_data["headlines"])
+
+    return jsonify({
+        "symbol": symbol.upper(),
+        "latest_price": stock_data.get("latest_price", "N/A"),
+        "sentiment": sentiment_data["sentiment"],
+        "sentiment_score": sentiment_score["sentiment_score"],
+        "trade_decision": sentiment_score["trade_decision"],
+        "RSI": indicators.get("RSI", {}),
+        "MACD": indicators.get("MACD", {})
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

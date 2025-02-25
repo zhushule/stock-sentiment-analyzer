@@ -1,50 +1,47 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Line } from "react-chartjs-2";
-import { Chart, registerables } from "chart.js";
-
-Chart.register(...registerables);
+import "chart.js/auto";
 
 const StockChart = ({ symbol }) => {
   const [chartData, setChartData] = useState(null);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!symbol) return;
+    const fetchStockHistory = async () => {
+      try {
+        const response = await axios.get(`http://127.0.0.1:5000/api/stock/history/${symbol}`);
+        const stockHistory = response.data.history;
 
-    axios
-      .get(`http://127.0.0.1:5000/api/stock/history/${symbol}`)
-      .then((response) => {
-        const history = response.data.history;
-
-        if (!history || history.length === 0) {
-          setError("No stock data available.");
+        if (!stockHistory || stockHistory.length === 0) {
+          console.error("No stock history available for", symbol);
           return;
         }
 
-        const dates = history.map((entry) => entry.date);
-        const prices = history.map((entry) => entry.price);
+        const dates = stockHistory.map(item => item.date);
+        const prices = stockHistory.map(item => item.price);
 
         setChartData({
           labels: dates,
           datasets: [
             {
-              label: `Stock Price ($) - ${symbol}`,
+              label: `${symbol} Price Trend`,
               data: prices,
-              fill: false,
               borderColor: "blue",
-              tension: 0.1,
-            },
-          ],
+              borderWidth: 2,
+              fill: false
+            }
+          ]
         });
-      })
-      .catch(() => setError("Failed to load stock history."));
+      } catch (error) {
+        console.error("Error fetching stock history", error);
+      }
+    };
+
+    fetchStockHistory();
   }, [symbol]);
 
   return (
-    <div style={{ maxWidth: "700px", margin: "auto", textAlign: "center" }}>
-      <h3>Stock Price Trend</h3>
-      {error ? <p style={{ color: "red" }}>{error}</p> : null}
+    <div style={{ marginTop: "20px" }}>
       {chartData ? <Line data={chartData} /> : <p>Loading chart...</p>}
     </div>
   );

@@ -1,16 +1,14 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const StockPrice = ({ onStockSelect }) => {
+const StockPrice = ({ setSelectedStock }) => {
   const [symbol, setSymbol] = useState("");
-  const [data, setData] = useState(null);
-  const [sentiment, setSentiment] = useState(null);
+  const [tradeDecision, setTradeDecision] = useState(null);
   const [error, setError] = useState("");
 
   const fetchStockData = async () => {
-    setError("");
-    setData(null);
-    setSentiment(null);
+    setError(""); // Clear previous errors
+    setTradeDecision(null);
 
     if (!symbol) {
       setError("Please enter a stock symbol.");
@@ -18,25 +16,18 @@ const StockPrice = ({ onStockSelect }) => {
     }
 
     try {
-      const stockResponse = await axios.get(`http://127.0.0.1:5000/api/stock/${symbol}`);
-      const sentimentResponse = await axios.get(`http://127.0.0.1:5000/api/sentiment/${symbol}`);
-
-      setData(stockResponse.data);
-      setSentiment(sentimentResponse.data);
-      onStockSelect(symbol);
+      // Fetch Trade Decision API (includes RSI, MACD, Sentiment, etc.)
+      const response = await axios.get(`http://127.0.0.1:5000/api/trade-decision/${symbol}`);
+      console.log("Trade Decision Data:", response.data); // Add this line for debugging
+      setTradeDecision(response.data);
+      setSelectedStock(symbol);
     } catch (err) {
       setError("Error fetching stock or sentiment data. Check the symbol.");
     }
   };
 
-  const getSentimentColor = (sentimentType) => {
-    if (sentimentType === "Positive") return "green";
-    if (sentimentType === "Negative") return "red";
-    return "gray"; // Neutral
-  };
-
   return (
-    <div>
+    <div style={{ textAlign: "center", padding: "20px" }}>
       <h2>Stock Price & Sentiment Checker</h2>
       <input
         type="text"
@@ -48,25 +39,40 @@ const StockPrice = ({ onStockSelect }) => {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {data && (
+      {tradeDecision && (
         <div>
-          <h3>Stock: {data.symbol}</h3>
-          <p>Latest Price: ${data.latest_price}</p>
-        </div>
-      )}
+          <h3>Stock: {tradeDecision.symbol}</h3>
+          <p>Latest Price: ${tradeDecision.latest_price}</p>
 
-      {sentiment && (
-        <div>
-          <h3>Overall Sentiment: {sentiment.sentiment}</h3>
+          {/* Sentiment Analysis */}
+          <h3>Overall Sentiment: {tradeDecision.sentiment}</h3>
+
+          {/* Technical Indicators */}
+          <h4>Technical Indicators:</h4>
+          <p>RSI: {tradeDecision.RSI || "N/A"}</p>
+          <p>MACD Line: {tradeDecision.MACD?.["MACD Line"] || "N/A"}</p>
+          <p>Signal Line: {tradeDecision.MACD?.["Signal Line"] || "N/A"}</p>
+
+          {/* Trade Decision */}
+          <h2 style={{ color: tradeDecision.trade_decision === "BUY" ? "green" :
+                       tradeDecision.trade_decision === "SELL" ? "red" : "gray" }}>
+            Recommendation: {tradeDecision.trade_decision}
+          </h2>
+
+          {/* News Section */}
           <h4>Latest News:</h4>
           <ul>
-            {sentiment.headlines.map((headline, index) => (
-              <li key={index} style={{ color: getSentimentColor(headline.sentiment) }}>
-                <a href={headline.url} target="_blank" rel="noopener noreferrer">
-                  {headline.title}
-                </a> - {headline.sentiment}
-              </li>
-            ))}
+            {tradeDecision.headlines && tradeDecision.headlines.length > 0 ? (
+              tradeDecision.headlines.map((headline, index) => (
+                <li key={index}>
+                  <a href={headline.url} target="_blank" rel="noopener noreferrer">
+                    {headline.title}
+                  </a> - {headline.sentiment}
+                </li>
+              ))
+            ) : (
+              <p>No news available.</p>
+            )}
           </ul>
         </div>
       )}
