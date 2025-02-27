@@ -17,7 +17,7 @@ def fetch_news(stock_symbol):
         logging.error("NEWS_API_KEY is missing! Check .env file")
         return [{"title": "Error: NEWS_API_KEY is missing! Check .env file", "url": "", "sentiment": "Neutral"}]
 
-    url = f"https://newsapi.org/v2/everything?q={stock_symbol}&language=en&sortBy=publishedAt&pageSize=10&apiKey={NEWS_API_KEY}"
+    url = f"https://newsapi.org/v2/everything?q={stock_symbol}&language=en&sortBy=publishedAt&pageSize=20&apiKey={NEWS_API_KEY}"
     logging.info(f"Fetching news for {stock_symbol} with URL: {url}")
     response = requests.get(url)
 

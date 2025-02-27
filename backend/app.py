@@ -4,9 +4,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from services.sentiment_service import get_stock_sentiment, analyze_sentiment_with_score
-from services.stock_data import get_stock_data  # ✅ FIXED: Correct Import
-from services.indicators import get_technical_indicators  # ✅ FIXED: Correct Import
-
+from services.stock_data import get_stock_data
+from services.indicators import get_technical_indicators
 
 # Load environment variables
 load_dotenv()
@@ -20,7 +19,6 @@ def home():
 
 @app.route('/api/stock/<symbol>', methods=['GET'])
 def get_stock_price(symbol):
-    """ Fetch latest stock price using Yahoo Finance """
     try:
         stock = yf.Ticker(symbol)
         stock_info = stock.history(period="1d")
@@ -39,7 +37,6 @@ def get_stock_price(symbol):
 
 @app.route('/api/stock/history/<symbol>', methods=['GET'])
 def get_stock_history(symbol):
-    """ Fetch last 30 days of stock price history """
     try:
         stock = yf.Ticker(symbol)
         history = stock.history(period="30d")
@@ -56,16 +53,14 @@ def get_stock_history(symbol):
 
 @app.route('/api/sentiment/<symbol>', methods=['GET'])
 def stock_sentiment(symbol):
-    """ API Endpoint to get stock sentiment based on news """
     sentiment_data = get_stock_sentiment(symbol)
     return jsonify(sentiment_data)
 
 @app.route('/api/trade-decision/<symbol>', methods=['GET'])
 def trade_decision(symbol):
-    """ Combine stock price, technical indicators, and sentiment to make a buy/sell decision """
-    stock_data = get_stock_data(symbol)  # ✅ FIXED: This should work now
-    indicators = get_technical_indicators(symbol)  # ✅ FIXED
-    sentiment_data = get_stock_sentiment(symbol)  # ✅ FIXED
+    stock_data = get_stock_data(symbol)
+    indicators = get_technical_indicators(symbol)
+    sentiment_data = get_stock_sentiment(symbol)
     
     sentiment_score = analyze_sentiment_with_score(sentiment_data["headlines"])
 

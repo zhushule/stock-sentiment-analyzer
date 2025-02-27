@@ -16,9 +16,8 @@ const StockPrice = ({ setSelectedStock }) => {
     }
 
     try {
-      // Fetch Trade Decision API (includes RSI, MACD, Sentiment, etc.)
       const response = await axios.get(`http://127.0.0.1:5000/api/trade-decision/${symbol}`);
-      console.log("Trade Decision Data:", response.data); // Add this line for debugging
+      console.log("Trade Decision Data:", response.data);
       setTradeDecision(response.data);
       setSelectedStock(symbol);
     } catch (err) {
@@ -44,36 +43,17 @@ const StockPrice = ({ setSelectedStock }) => {
           <h3>Stock: {tradeDecision.symbol}</h3>
           <p>Latest Price: ${tradeDecision.latest_price}</p>
 
-          {/* Sentiment Analysis */}
           <h3>Overall Sentiment: {tradeDecision.sentiment}</h3>
 
-          {/* Technical Indicators */}
           <h4>Technical Indicators:</h4>
           <p>RSI: {tradeDecision.RSI || "N/A"}</p>
           <p>MACD Line: {tradeDecision.MACD?.["MACD Line"] || "N/A"}</p>
           <p>Signal Line: {tradeDecision.MACD?.["Signal Line"] || "N/A"}</p>
 
-          {/* Trade Decision */}
           <h2 style={{ color: tradeDecision.trade_decision === "BUY" ? "green" :
                        tradeDecision.trade_decision === "SELL" ? "red" : "gray" }}>
             Recommendation: {tradeDecision.trade_decision}
           </h2>
-
-          {/* News Section */}
-          <h4>Latest News:</h4>
-          <ul>
-            {tradeDecision.headlines && tradeDecision.headlines.length > 0 ? (
-              tradeDecision.headlines.map((headline, index) => (
-                <li key={index}>
-                  <a href={headline.url} target="_blank" rel="noopener noreferrer">
-                    {headline.title}
-                  </a> - {headline.sentiment}
-                </li>
-              ))
-            ) : (
-              <p>No news available.</p>
-            )}
-          </ul>
         </div>
       )}
     </div>
